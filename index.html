@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JARVIS 3.0 - Voice Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Orbitron', sans-serif;
+      background: black;
+      color: white;
+      overflow: hidden;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      text-shadow: 0 0 10px cyan;
+    }
+
+    .talk {
+      background: linear-gradient(45deg, #00f260, #0575e6);
+      color: white;
+      font-size: 1.3rem;
+      padding: 14px 28px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 20px;
+      box-shadow: 0 0 15px #00f260;
+    }
+
+    .content {
+      margin-top: 30px;
+      font-size: 1.4rem;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid cyan;
+      max-width: 90%;
+    }
+
+    .robot {
+      width: 300px;
+      margin-bottom: 2px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .waveform {
+      display: flex;
+      gap: 4px;
+      margin-top: 15px;
+      height: 20px;
+    }
+
+    .bar {
+      width: 5px;
+      height: 100%;
+      background: cyan;
+      animation: wave 1s infinite;
+      animation-delay: calc(0.1s * var(--i));
+      opacity: 0.5;
+    }
+
+    @keyframes wave {
+      0%, 100% { transform: scaleY(0.4); opacity: 0.3; }
+      50% { transform: scaleY(1); opacity: 1; }
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-15px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+
+  <div class="container">
+    <img src="https://res.cloudinary.com/ddxtfqmt4/image/upload/v1753419884/3-robot-removebg-preview_jkhi0e.png" class="robot" />
+    <h1>🧠 JARVIS 3.0</h1>
+    <button class="talk">🎤 Talk to JARVIS</button>
+    <div class="waveform" id="waveform">
+      <div class="bar" style="--i:1"></div>
+      <div class="bar" style="--i:2"></div>
+      <div class="bar" style="--i:3"></div>
+      <div class="bar" style="--i:4"></div>
+      <div class="bar" style="--i:5"></div>
+    </div>
+    <div class="content">Say: "Jarvis", "Tell about you", "Open YouTube", or "Tell me a joke"</div>
+  </div>
+
+  <script>
+    const waveform = document.getElementById("waveform");
+    waveform.style.display = "none";
+
+    // Matrix background animation
+    const canvas = document.getElementById("matrix");
+    const ctx = canvas.getContext("2d");
+    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+
+    const letters = "JARVIS0123456789".split("");
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function draw() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#0F0";
+      ctx.font = fontSize + "px monospace";
+      for (let i = 0; i < drops.length; i++) {
+        const text = letters[Math.floor(Math.random() * letters.length)];
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+    setInterval(draw, 33);
+
+    // Voice Assistant
+    const btn = document.querySelector('.talk');
+    const content = document.querySelector('.content');
+
+    const jokes = [
+      "Why did the developer go broke? Because he used up all his cache!",
+      "Why do Java developers wear glasses? Because they don't see sharp.",
+      "I'm not lazy, I'm just on energy-saving mode!"
+    ];
+
+    const infoData = {
+      "allu arjun": "Allu Arjun is an Indian film actor known for his work in Telugu cinema. He is famous for his stylish acting and dancing skills.",
+      "elon musk": "Elon Musk is the CEO of Tesla and SpaceX, known for his innovations in electric vehicles and space exploration.",
+      "narendra modi": "Narendra Modi is the Prime Minister of India, known for major reforms and digital initiatives in the country."
+    };
+
+    function speak(text) {
+      const speech = new SpeechSynthesisUtterance(text);
+      speech.rate = 1;
+      speech.pitch = 1;
+      speech.volume = 1;
+      window.speechSynthesis.speak(speech);
+    }
+
+    function wishMe() {
+      const hour = new Date().getHours();
+      if (hour < 12) speak("Good Morning Boss...");
+      else if (hour < 17) speak("Good Afternoon Master...");
+      else speak("Good Evening Sir...");
+    }
+
+    window.addEventListener('load', () => {
+      speak("Initializing JARVIS 3.0...");
+      wishMe();
+    });
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech Recognition not supported. Use Google Chrome.");
+    } else {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event) => {
+        waveform.style.display = "none";
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        content.textContent = transcript;
+        takeCommand(transcript);
+      };
+
+      btn.addEventListener('click', () => {
+        content.textContent = "Listening...";
+        waveform.style.display = "flex";
+        recognition.start();
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key.toLowerCase() === "j") {
+          waveform.style.display = "flex";
+          recognition.start();
+        }
+      });
+
+      function takeCommand(msg) {
+        if (msg.includes("hello") || msg.includes("hey")) {
+          speak("Hello sir, how can I help you?");
+        } else if (msg.includes("tell about you")) {
+          speak("I am JARVIS 3.0, your futuristic AI assistant built with HTML, CSS, and JavaScript. I respond to voice commands, open websites, and even crack jokes.");
+        } else if (msg.includes("open google")) {
+          window.open("https://google.com", "_blank");
+          speak("Opening Google...");
+        } else if (msg.includes("open youtube")) {
+          window.open("https://youtube.com", "_blank");
+          speak("Opening YouTube...");
+        } else if (msg.includes("open facebook")) {
+          window.open("https://facebook.com", "_blank");
+          speak("Opening Facebook...");
+        } else if (msg.includes("time")) {
+          const time = new Date().toLocaleTimeString();
+          speak("The current time is " + time);
+        } else if (msg.includes("date")) {
+          const date = new Date().toLocaleDateString();
+          speak("Today's date is " + date);
+        } else if (msg.includes("calculator")) {
+          window.open("https://www.google.com/search?q=calculator", "_blank");
+          speak("Opening Calculator...");
+        } else if (msg.includes("joke")) {
+          const joke = jokes[Math.floor(Math.random() * jokes.length)];
+          speak(joke);
+        } else if (msg.includes("jarvis")) {
+          speak("Yes sir, I’m listening.");
+        } else {
+          const keywords = Object.keys(infoData);
+          let found = false;
+          keywords.forEach(key => {
+            if (msg.includes(key)) {
+              speak(infoData[key]);
+              found = true;
+            }
+          });
+          if (!found) {
+            speak("Let me search that for you.");
+            window.open(`https://www.google.com/search?q=${msg.replace(/\s/g, "+")}`, "_blank");
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>
